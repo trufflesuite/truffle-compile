@@ -52,25 +52,21 @@ var compile = function(sources, options, callback) {
   // Alright, now remove it.
   process.removeListener("uncaughtException", solc_listener);
 
-  var errors = result.errors || [];
-  var warnings = result.errors || [];
+  var warnings = (result.errors || []).filter(function(error) {
+    return error.indexOf("Warning:") >= 0;
+  });
 
-  if (options.strict == true) {
-    errors = errors.filter(function(error) {
-      return error.indexOf("Warning:") < 0;
-    });
-    warnings = warnings.filter(function(error) {
-      return error.indexOf("Warning:") >= 0;
-    });
+  var errors = (result.errors || []).filter(function(error) {
+    return error.indexOf("Error:") >= 0;
+  });
 
-    if (options.quiet != null) {
-      warnings.forEach(function(warning) {
-        logger.log(warning);
-      });
-    }
+  if ((options.quiet == null || options.quiet === false) && ((options.strict == null) || options.strict === false)) {
+    warnings.forEach(function(warning) {
+      logger.log(warning);
+    });
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 || (options.strict === true && (warnings.length > 0))){
     return callback(new CompileError(result.errors.join()));
   }
 
