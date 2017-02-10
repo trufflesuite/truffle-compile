@@ -7,7 +7,7 @@
     "async": "^2.1.4",
     "colors": "^1.1.2",
     "graphlib": "^2.1.1",
-    "solc": "0.4.8",
+    "solc": "0.4.9",
     "solidity-parser": "^0.2.0",
     "truffle-config": "0.0.7",
     "truffle-contract-sources": "^0.0.1",
@@ -15,7 +15,7 @@
     "truffle-expect": "0.0.3"
   },
   "devDependencies": {
-    "truffle-resolver": "1.0.0"
+    "truffle-resolver": "1.0.1"
   },
   "scripts": {
     "test": "mocha"
