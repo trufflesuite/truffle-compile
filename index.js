@@ -48,7 +48,7 @@ var compile = function(sources, options, callback) {
   // Add the listener back in, just in case I need it.
   process.on("uncaughtException", solc_listener);
 
-  var result = solc.compile({sources: operatingSystemIndependentSources}, 1);
+  var result = solc.compile({sources: operatingSystemIndependentSources}, 0);
 
   // Alright, now remove it.
   process.removeListener("uncaughtException", solc_listener);
