@@ -93,6 +93,18 @@ var compile = function(sources, options, callback) {
     }
   });
 
+  if (options.parse){
+    const SolidityParser = require("solidity-parser");
+    Object.keys(operatingSystemIndependentSources).forEach(function(file_path) {
+      try {
+        var source = operatingSystemIndependentSources[file_path];
+        SolidityParser.parse(source);
+      } catch (e) {
+        console.log("WARNING:  Parsing error in " + file_path + ":\n" + e.message);
+      }
+    });
+  }
+
   var result = solc.compileStandard(JSON.stringify(solcStandardInput));
 
   var standardOutput = JSON.parse(result);
