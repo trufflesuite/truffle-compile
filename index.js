@@ -75,7 +75,9 @@ var compile = function(sources, options, callback) {
             "evm.bytecode.object",
             "evm.bytecode.sourceMap",
             "evm.deployedBytecode.object",
-            "evm.deployedBytecode.sourceMap"
+            "evm.deployedBytecode.sourceMap",
+            "devdoc",
+            "userdoc"
           ]
         },
       }
@@ -145,7 +147,9 @@ var compile = function(sources, options, callback) {
         abi: contract.abi,
         bytecode: "0x" + contract.evm.bytecode.object,
         runtimeBytecode: "0x" + contract.evm.deployedBytecode.object,
-        unlinked_binary: "0x" + contract.evm.bytecode.object // deprecated
+        unlinked_binary: "0x" + contract.evm.bytecode.object, // deprecated
+        devdoc: contract.devdoc,
+        userdoc: contract.userdoc        
       }
 
       // Go through the link references and replace them with older-style
