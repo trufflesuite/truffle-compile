@@ -31,6 +31,8 @@ var compile = function(sources, options, callback) {
     options.logger = console;
   }
 
+  var hasTargets = options.compilationTargets && options.compilationTargets.length;
+
   expect.options(options, [
     "contracts_directory",
     "solc"
@@ -46,10 +48,10 @@ var compile = function(sources, options, callback) {
     process.removeListener("uncaughtException", solc_listener);
   }
 
-
   // Ensure sources have operating system independent paths
   // i.e., convert backslashes to forward slashes; things like C: are left intact.
   var operatingSystemIndependentSources = {};
+  var operatingSystemIndependentTargets = {};
   var originalPathMappings = {};
 
   Object.keys(sources).forEach(function(source) {
@@ -65,30 +67,46 @@ var compile = function(sources, options, callback) {
     // Save the result
     operatingSystemIndependentSources[replacement] = sources[source];
 
+    // Just substitute replacement for original in target case. It's
+    // a disposable subset of `sources`
+    if(hasTargets && options.compilationTargets.includes(source)){
+      operatingSystemIndependentTargets[replacement] = sources[source];
+    }
+
     // Map the replacement back to the original source path.
     originalPathMappings[replacement] = source;
   });
+
+  var defaultSelectors = {
+   "": [
+      "legacyAST",
+      "ast"
+    ],
+    "*": [
+      "abi",
+      "evm.bytecode.object",
+      "evm.bytecode.sourceMap",
+      "evm.deployedBytecode.object",
+      "evm.deployedBytecode.sourceMap"
+    ]
+  }
+
+  // Specify compilation targets
+  // Each target uses defaultSelectors, defaulting to single target `*` if targets are unspecified
+  var outputSelection = {};
+  var targets = operatingSystemIndependentTargets;
+  var targetPaths = Object.keys(targets);
+
+  (targetPaths.length)
+    ? targetPaths.forEach(key => outputSelection[key] = defaultSelectors)
+    : outputSelection["*"] = defaultSelectors;
 
   var solcStandardInput = {
     language: "Solidity",
     sources: {},
     settings: {
       optimizer: options.solc.optimizer,
-      outputSelection: {
-        "*": {
-          "": [
-            "legacyAST",
-            "ast"
-          ],
-          "*": [
-            "abi",
-            "evm.bytecode.object",
-            "evm.bytecode.sourceMap",
-            "evm.deployedBytecode.object",
-            "evm.deployedBytecode.sourceMap"
-          ]
-        },
-      }
+      outputSelection: outputSelection,
     }
   };
 
@@ -150,6 +168,10 @@ var compile = function(sources, options, callback) {
 
     Object.keys(files_contracts).forEach(function(contract_name) {
       var contract = files_contracts[contract_name];
+
+      // All source will have a key, but only the compiled source will have
+      // the evm output.
+      if (!Object.keys(contract.evm).length) return;
 
       var contract_definition = {
         contract_name: contract_name,
@@ -289,8 +311,10 @@ function orderABI(contract){
 // quiet: Boolean. Suppress output. Defaults to false.
 // strict: Boolean. Return compiler warnings as errors. Defaults to false.
 compile.all = function(options, callback) {
-  var self = this;
+
   find_contracts(options.contracts_directory, function(err, files) {
+    if (err) return callback(err)
+
     options.paths = files;
     compile.with_dependencies(options, callback);
   });
@@ -319,6 +343,8 @@ compile.necessary = function(options, callback) {
 };
 
 compile.with_dependencies = function(options, callback) {
+  var self = this;
+
   options.logger = options.logger || console;
   options.contracts_directory = options.contracts_directory || process.cwd();
 
@@ -331,26 +357,37 @@ compile.with_dependencies = function(options, callback) {
 
   var config = Config.default().merge(options);
 
-  var self = this;
   Profiler.required_sources(config.with({
     paths: options.paths,
     base_path: options.contracts_directory,
     resolver: options.resolver
-  }), function(err, result) {
+  }), (err, allSources, required) => {
     if (err) return callback(err);
 
-    if (options.quiet != true) {
-      Object.keys(result).sort().forEach(function(import_path) {
-        var display_path = import_path;
-        if (path.isAbsolute(import_path)) {
-          display_path = "." + path.sep + path.relative(options.working_directory, import_path);
-        }
-        options.logger.log("Compiling " + display_path + "...");
-      });
-    }
+    var hasTargets = required.length;
 
-    compile(result, options, callback);
+    (hasTargets)
+      ? self.display(required, options)
+      : self.display(allSources, options);
+
+    options.compilationTargets = required;
+    compile(allSources, options, callback);
   });
 };
+
+compile.display = function(paths, options){
+  if (options.quiet != true) {
+    if (!Array.isArray(paths)){
+      paths = Object.keys(paths);
+    }
+
+    paths.sort().forEach(contract => {
+      if (path.isAbsolute(contract)) {
+        contract = "." + path.sep + path.relative(options.working_directory, contract);
+      }
+      options.logger.log("Compiling " + contract + "...");
+    });
+  }
+}
 
 module.exports = compile;
