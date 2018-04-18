@@ -1,5 +1,4 @@
 const fs = require("fs");
-const tmp = require("tmp");
 const path = require("path");
 const solc = require("solc");
 const assert = require("assert");
@@ -165,51 +164,102 @@ describe('CompilerProvider', function(){
     });
 
     it('caches releases and uses them if available', function(done){
-      tmp.dir((err, dir) => {
-        if(err) return done(err);
+      let initialAccessTime;
+      let finalAccessTime;
 
-        let initialAccessTime;
-        let finalAccessTime;
+      const thunk = findCacheDir({name: 'truffle', thunk: true});
+      const expectedCache = thunk('soljson-v0.4.21+commit.dfe3193c.js');
 
-        const thunk = findCacheDir({name: 'truffle', thunk: true});
-        const expectedCache = thunk('soljson-v0.4.21+commit.dfe3193c.js');
+      options.compiler = {
+        cache: true,
+        solc: "0.4.21"
+      };
 
+      // Run compiler, expecting solc to be downloaded and cached.
+      compile(newPragmaSource, options, (err, result) => {
+        if (err) return done(err);
+
+        assert(fs.existsSync(expectedCache), 'Should have cached compiler');
+
+        // Get cached solc access time
+        initialAccessTime = fs.statSync(expectedCache).atime.getTime()
+
+        // Wait a second and recompile, verifying that the cached solc
+        // got accessed / ran ok.
+        waitSecond().then(() => {
+
+          compile(newPragmaSource, options, (err, result) => {
+            if (err) return done(err);
+
+            finalAccessTime = fs.statSync(expectedCache).atime.getTime()
+
+            assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
+
+            // atime is not getting updated on read in CI.
+            if (!process.env.TEST){
+              assert(initialAccessTime < finalAccessTime, "Should have used cached compiler");
+            }
+
+            done();
+          });
+        }).catch(done);
+      });
+    });
+
+    describe('native / docker [ @native ]', function() {
+
+      it('compiles with native solc', function(done){
         options.compiler = {
-          cache: true,
-          solc: "0.4.21"
+          solc: "native"
         };
 
-        // Run compiler, expecting solc to be downloaded and cached.
         compile(newPragmaSource, options, (err, result) => {
           if (err) return done(err);
 
-          assert(fs.existsSync(expectedCache), 'Should have cached compiler');
-
-          // Get cached solc access time
-          initialAccessTime = fs.statSync(expectedCache).atime.getTime()
-
-          // Wait a second and recompile, verifying that the cached solc
-          // got accessed / ran ok.
-          waitSecond().then(() => {
-
-            compile(newPragmaSource, options, (err, result) => {
-              if (err) return done(err);
-
-              finalAccessTime = fs.statSync(expectedCache).atime.getTime()
-
-              assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
-
-              // atime is not getting updated on read in CI.
-              if (!process.env.CI){
-                assert(initialAccessTime < finalAccessTime, "Should have used cached compiler");
-              }
-
-              done();
-            });
-
-          }).catch(done);
+          assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
+          done();
         });
       });
+
+      it('compiles with dockerized solc', function(done){
+        options.compiler = {
+          solc: "0.4.22",
+          docker: true
+        };
+
+        compile(newPragmaSource, options, (err, result) => {
+          if (err) return done(err);
+
+          assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
+          done();
+        });
+      });
+
+      it('errors if running dockerized solc without specifying an image', function(done){
+        options.compiler = {
+          solc: undefined,
+          docker: true
+        };
+
+        compile(newPragmaSource, options, (err, result) => {
+          assert(err.message.includes('option must be'));
+          done();
+        });
+      })
+
+      it('errors if running dockerized solc when image does not exist locally', function(done){
+        const imageName = 'fantasySolc.7777555';
+
+        options.compiler = {
+          solc: imageName,
+          docker: true
+        };
+
+        compile(newPragmaSource, options, (err, result) => {
+          assert(err.message.includes(imageName));
+          done();
+        });
+      })
     });
   });
 });
