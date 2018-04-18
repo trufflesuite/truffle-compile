@@ -190,7 +190,7 @@ CompilerProvider.prototype.getByUrl = function(version){
           self.addToCache(response, file);
           return self.compilerFromString(response);
         })
-        .catch(err => self.errors('noRequest', url, err));
+        .catch(err => { throw self.errors('noRequest', url, err)});
     });
 }
 
@@ -211,7 +211,7 @@ CompilerProvider.prototype.isLocal = function(localPath){
  * @return {String}          path
  */
 CompilerProvider.prototype.resolveCache = function(fileName){
-  const thunk = findCacheDir({name: 'truffle', thunk: true});
+  const thunk = findCacheDir({name: 'truffle', cwd: __dirname, thunk: true});
   return thunk(fileName);
 }
 
@@ -258,7 +258,9 @@ CompilerProvider.prototype.getFromCache = function(fileName){
 CompilerProvider.prototype.compilerFromString = function(code){
   const solc = this.getDefault();
   const compiler = requireFromString(code);
-  return solc.setupMethods(compiler);
+  const wrapped = solc.setupMethods(compiler);
+  this.removeListener();
+  return wrapped;
 }
 
 /**
