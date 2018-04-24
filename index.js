@@ -387,6 +387,7 @@ compile.display = function(paths, options){
       options.logger.log("Compiling " + contract + "...");
     });
   }
-}
+};
 
+compile.CompilerProvider = CompilerProvider;
 module.exports = compile;

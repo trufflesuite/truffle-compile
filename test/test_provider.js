@@ -58,6 +58,12 @@ describe('CompilerProvider', function(){
       assert(releases.prereleases[0] === firstSolc, 'Should return prereleases');
       assert(releases.releases[0] === releases.latestRelease, 'Should return releases/latestRelease');
     });
+
+    it('lists available docker images [ @native ]', async function(){
+      const list = await provider.getDockerTags();
+      assert(Array.isArray(list));
+      assert(typeof list[0] === 'string');
+    })
   });
 
   describe('integration', function(){
@@ -81,6 +87,7 @@ describe('CompilerProvider', function(){
       oldPragmaPinSource = { "OldPragmaPin.sol": oldPragmaPin};
       oldPragmaFloatSource = { "OldPragmaFloat.sol": oldPragmaFloat};
     });
+
 
     it('compiles w/ default solc if no compiler specified (float)', function(done){
       options.compiler = { cache: false };
@@ -216,6 +223,7 @@ describe('CompilerProvider', function(){
         compile(newPragmaSource, options, (err, result) => {
           if (err) return done(err);
 
+          assert(result['NewPragma'].compiler.version.includes('Linux.g++'));
           assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
           done();
         });
@@ -227,9 +235,12 @@ describe('CompilerProvider', function(){
           docker: true
         };
 
+        const expectedVersion = '0.4.22+commit.4cb486ee.Linux.g++';
+
         compile(newPragmaSource, options, (err, result) => {
           if (err) return done(err);
 
+          assert(result['NewPragma'].compiler.version === expectedVersion);
           assert(result['NewPragma'].contract_name === 'NewPragma', 'Should have compiled');
           done();
         });
