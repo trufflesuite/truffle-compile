@@ -1,6 +1,6 @@
 {
   "name": "truffle-compile",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "description": "Compiler helper and artifact manager",
   "main": "index.js",
   "dependencies": {
@@ -12,7 +12,7 @@
     "request": "^2.85.0",
     "request-promise": "^4.2.2",
     "require-from-string": "^2.0.2",
-    "solc": "0.4.21",
+    "solc": "0.4.23",
     "truffle-config": "^1.0.4",
     "truffle-contract-sources": "^0.0.1",
     "truffle-error": "^0.0.2",
