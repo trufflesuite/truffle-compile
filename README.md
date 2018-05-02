@@ -28,7 +28,10 @@ module.exports = {
 
 ### Using docker / natively compiled binaries
 
-These run **a lot** faster than solcjs. `openzeppelin-solidity` (107 contracts) compiles twice as fast.
+These run **a lot** faster than solcjs. `openzeppelin-solidity` (107 contracts) compiles
+more than twice as fast. The first time truffle uses a given docker version there's some extra
+overhead as it caches the solc version string and a solcjs companion compiler. All subsequent runs
+should be at full speed.
 
 ```javascript
 // Native
