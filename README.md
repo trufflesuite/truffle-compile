@@ -51,8 +51,8 @@ Docker and native binary compilers process large contract sets much faster than 
 
 Times to `truffle compile` on a MacBook Air 1.8GHz, Node 8.11.1
 
-| Project              | # files | solcjs | docker | bin (OSX) |
-|----------------------|---------| ------:|--------:|-----------:|
+| Project              | # files | solcjs | docker | bin |
+|----------------------|---------:| ------:|--------:|-----------:|
 | truffle/metacoin-box |       3 |   4.4s |   4.4s |      4.7s |
 | gnosis/pm-contracts  |      34 |  21.7s |  10.9s |     10.2s |
 | zeppelin-solidity    |     107 |  36.7s |  11.7s |     11.1s |
