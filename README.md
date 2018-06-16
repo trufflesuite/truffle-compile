@@ -26,15 +26,10 @@ module.exports = {
 };
 ```
 
-### Using docker / natively compiled binaries
-
-These run **a lot** faster than solcjs. `openzeppelin-solidity` (107 contracts) compiles
-more than twice as fast. The first time truffle uses a given docker version there's some extra
-overhead as it caches the solc version string and a solcjs companion compiler. All subsequent runs
-should be at full speed.
+### Using docker / natively built binaries
 
 ```javascript
-// Native
+// Native binary
 compiler: {
   solc: "native"
 }
@@ -50,5 +45,17 @@ Solc docker images should be installed locally by running:
 ```shell
 $ docker pull ethereum/solc:0.4.22  // Example image
 ```
+
+### Speed comparison
+Docker and native binary compilers process large contract sets much faster than solcjs. However, if you're just compiling a few contracts at a time, the speedup isn't significant relative to the overhead of running a command (see below). The first time truffle uses a docker version there's some extra overhead as it caches the solc version string and a solcjs companion compiler. All subsequent runs should be at full speed. 
+
+Times to `truffle compile` on a MacBook Air 1.8GHz, Node 8.11.1
+
+| Project              | # files | solcjs | docker | bin (OSX) |
+|----------------------|---------| ------:|--------:|-----------:|
+| truffle/metacoin-box |       3 |   4.4s |   4.4s |      4.7s |
+| gnosis/pm-contracts  |      34 |  21.7s |  10.9s |     10.2s |
+| zeppelin-solidity    |     107 |  36.7s |  11.7s |     11.1s |
+
 
 For help installing a natively built compiler, see the Solidity docs [here](https://solidity.readthedocs.io/en/v0.4.23/installing-solidity.html#binary-packages).
