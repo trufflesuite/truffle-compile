@@ -15,6 +15,8 @@ $ truffle compile --list releases --all    # Complete list of stable releases.
 ```
 
 ### Specifying a solcjs version in `truffle.js`
+
+Set the compiler solc key to the version you'd like. Truffle will fetch it from the solc-bin server and cache it in your local evironment. 
 ```javascript
 module.exports = {
   networks: {
@@ -28,6 +30,11 @@ module.exports = {
 
 ### Using docker / natively built binaries
 
+Solc docker images should be installed locally by running:
+```shell
+$ docker pull ethereum/solc:0.4.22  // Example image
+```
+**truffle.js**
 ```javascript
 // Native binary
 compiler: {
@@ -41,13 +48,8 @@ compiler: {
 }
 ```
 
-Solc docker images should be installed locally by running:
-```shell
-$ docker pull ethereum/solc:0.4.22  // Example image
-```
-
 ### Speed comparison
-Docker and native binary compilers process large contract sets much faster than solcjs. However, if you're just compiling a few contracts at a time, the speedup isn't significant relative to the overhead of running a command (see below). The first time truffle uses a docker version there's some extra overhead as it caches the solc version string and a solcjs companion compiler. All subsequent runs should be at full speed. 
+Docker and native binary compilers process large contract sets much faster than solcjs. If you're just compiling a few contracts at a time, the speedup isn't significant relative to the overhead of running a command (see below). The first time truffle uses a docker version there's some extra overhead as it caches the solc version string and a solcjs companion compiler. All subsequent runs should be at full speed. 
 
 Times to `truffle compile` on a MacBook Air 1.8GHz, Node 8.11.1
 
