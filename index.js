@@ -86,7 +86,9 @@ var compile = function(sources, options, callback) {
             "evm.bytecode.object",
             "evm.bytecode.sourceMap",
             "evm.deployedBytecode.object",
-            "evm.deployedBytecode.sourceMap"
+            "evm.deployedBytecode.sourceMap",
+            "devdoc",
+            "userdoc"
           ]
         },
       }
@@ -162,6 +164,8 @@ var compile = function(sources, options, callback) {
         ast: standardOutput.sources[source_path].ast,
         abi: contract.abi,
         bytecode: "0x" + contract.evm.bytecode.object,
+        devdoc: contract.devdoc,
+        userdoc: contract.userdoc        
         deployedBytecode: "0x" + contract.evm.deployedBytecode.object,
         unlinked_binary: "0x" + contract.evm.bytecode.object, // deprecated
         compiler: {
