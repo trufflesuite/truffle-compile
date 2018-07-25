@@ -4,7 +4,6 @@ var OS = require("os");
 var path = require("path");
 var fs = require("fs");
 var async = require("async");
-var Profiler = require("./profiler");
 var CompileError = require("./compileerror");
 var expect = require("truffle-expect");
 var find_contracts = require("truffle-contract-sources");
